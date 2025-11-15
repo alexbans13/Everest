@@ -19,11 +19,13 @@ import { useCallback } from 'react';
 
 type JourneyWithStatus = Journey & { user_journey_id?: string; is_active?: boolean };
 type FilterType = 'all' | 'free' | 'premium';
+type CategoryFilterType = 'all' | 'distance' | 'altitude';
 
 export default function JourneysScreen() {
   const [journeys, setJourneys] = useState<JourneyWithStatus[]>([]);
   const [filteredJourneys, setFilteredJourneys] = useState<JourneyWithStatus[]>([]);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilterType>('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [startingJourney, setStartingJourney] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export default function JourneysScreen() {
     try {
       const data = await getAvailableJourneys();
       setJourneys(data);
-      applyFilter(data, filter);
+      applyFilters(data, filter, categoryFilter);
     } catch (error) {
       console.error('Error loading journeys:', error);
       Alert.alert('Error', 'Failed to load journeys');
@@ -42,24 +44,41 @@ export default function JourneysScreen() {
     }
   };
 
-  const applyFilter = useCallback((journeyList: JourneyWithStatus[], filterType: FilterType) => {
-    let filtered: JourneyWithStatus[];
+  const applyFilters = useCallback((journeyList: JourneyWithStatus[], filterType: FilterType, catFilter: CategoryFilterType) => {
+    let filtered: JourneyWithStatus[] = journeyList;
+    
+    // Apply premium/free filter
     switch (filterType) {
       case 'premium':
-        filtered = journeyList.filter(j => j.is_premium === true);
+        filtered = filtered.filter(j => j.is_premium === true);
         break;
       case 'free':
-        filtered = journeyList.filter(j => !j.is_premium || j.is_premium === false);
+        filtered = filtered.filter(j => !j.is_premium || j.is_premium === false);
         break;
       default:
-        filtered = journeyList;
+        // 'all' - no filter
+        break;
     }
+    
+    // Apply category filter
+    switch (catFilter) {
+      case 'distance':
+        filtered = filtered.filter(j => j.category === 'distance' || !j.category);
+        break;
+      case 'altitude':
+        filtered = filtered.filter(j => j.category === 'altitude');
+        break;
+      default:
+        // 'all' - no filter
+        break;
+    }
+    
     setFilteredJourneys(filtered);
   }, []);
 
   useEffect(() => {
-    applyFilter(journeys, filter);
-  }, [filter, journeys, applyFilter]);
+    applyFilters(journeys, filter, categoryFilter);
+  }, [filter, categoryFilter, journeys, applyFilters]);
 
   useEffect(() => {
     loadJourneys();
@@ -117,6 +136,13 @@ export default function JourneysScreen() {
     return `${meters.toFixed(0)} m`;
   };
 
+  const formatAltitude = (meters: number) => {
+    if (meters >= 1000) {
+      return `${(meters / 1000).toFixed(2)} km`;
+    }
+    return `${meters.toFixed(0)} m`;
+  };
+
   const getDifficultyColor = (difficulty: Journey['difficulty']) => {
     switch (difficulty) {
       case 'easy':
@@ -149,37 +175,84 @@ export default function JourneysScreen() {
         <Text style={styles.title}>Available Journeys</Text>
         <Text style={styles.subtitle}>Choose your next adventure</Text>
 
-        {/* Filter Buttons */}
-        <View style={styles.filterContainer}>
-          <TouchableOpacity
-            style={[styles.filterButton, filter === 'all' && styles.filterButtonActive]}
-            onPress={() => setFilter('all')}
-          >
-            <Text style={[styles.filterButtonText, filter === 'all' && styles.filterButtonTextActive]}>
-              All
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterButton, filter === 'free' && styles.filterButtonActive]}
-            onPress={() => setFilter('free')}
-          >
-            <Text style={[styles.filterButtonText, filter === 'free' && styles.filterButtonTextActive]}>
-              Free
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterButton, filter === 'premium' && styles.filterButtonActive]}
-            onPress={() => setFilter('premium')}
-          >
-            <MaterialIcons 
-              name="star" 
-              size={16} 
-              color={filter === 'premium' ? '#fff' : '#6b7280'} 
-            />
-            <Text style={[styles.filterButtonText, filter === 'premium' && styles.filterButtonTextActive]}>
-              Premium
-            </Text>
-          </TouchableOpacity>
+        {/* Filters Container */}
+        <View style={styles.filtersCard}>
+          {/* Premium/Free Filter Section */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionLabel}>Pricing</Text>
+            <View style={styles.filterRow}>
+              <TouchableOpacity
+                style={[styles.filterChip, filter === 'all' && styles.filterChipActive]}
+                onPress={() => setFilter('all')}
+              >
+                <Text style={[styles.filterChipText, filter === 'all' && styles.filterChipTextActive]}>
+                  All
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterChip, filter === 'free' && styles.filterChipActive]}
+                onPress={() => setFilter('free')}
+              >
+                <Text style={[styles.filterChipText, filter === 'free' && styles.filterChipTextActive]}>
+                  Free
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterChip, filter === 'premium' && styles.filterChipActive]}
+                onPress={() => setFilter('premium')}
+              >
+                <MaterialIcons 
+                  name="star" 
+                  size={14} 
+                  color={filter === 'premium' ? '#fbbf24' : '#6b7280'} 
+                />
+                <Text style={[styles.filterChipText, filter === 'premium' && styles.filterChipTextActive]}>
+                  Premium
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Category Filter Section */}
+          <View style={[styles.filterSection, styles.filterSectionLast]}>
+            <Text style={styles.filterSectionLabel}>Category</Text>
+            <View style={styles.filterRow}>
+              <TouchableOpacity
+                style={[styles.filterChip, categoryFilter === 'all' && styles.filterChipActive]}
+                onPress={() => setCategoryFilter('all')}
+              >
+                <Text style={[styles.filterChipText, categoryFilter === 'all' && styles.filterChipTextActive]}>
+                  All
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterChip, categoryFilter === 'distance' && styles.filterChipActive]}
+                onPress={() => setCategoryFilter('distance')}
+              >
+                <MaterialIcons 
+                  name="straighten" 
+                  size={14} 
+                  color={categoryFilter === 'distance' ? '#3b82f6' : '#6b7280'} 
+                />
+                <Text style={[styles.filterChipText, categoryFilter === 'distance' && styles.filterChipTextActive]}>
+                  Distance
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterChip, categoryFilter === 'altitude' && styles.filterChipActive]}
+                onPress={() => setCategoryFilter('altitude')}
+              >
+                <MaterialIcons 
+                  name="landscape" 
+                  size={14} 
+                  color={categoryFilter === 'altitude' ? '#10b981' : '#6b7280'} 
+                />
+                <Text style={[styles.filterChipText, categoryFilter === 'altitude' && styles.filterChipTextActive]}>
+                  Altitude
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
         {filteredJourneys.length === 0 ? (
@@ -228,8 +301,33 @@ export default function JourneysScreen() {
                         {journey.difficulty.toUpperCase()}
                       </Text>
                     </View>
-                    <Text style={styles.distance}>{formatDistance(journey.total_distance)}</Text>
+                    {journey.category === 'altitude' && journey.target_altitude ? (
+                      <View style={styles.categoryInfo}>
+                        <MaterialIcons name="landscape" size={14} color="#6b7280" />
+                        <Text style={styles.distance}>{formatAltitude(journey.target_altitude)}</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.categoryInfo}>
+                        <MaterialIcons name="straighten" size={14} color="#6b7280" />
+                        <Text style={styles.distance}>{formatDistance(journey.total_distance)}</Text>
+                      </View>
+                    )}
                   </View>
+                  {journey.category && (
+                    <View style={[
+                      styles.categoryBadge,
+                      journey.category === 'altitude' ? styles.categoryBadgeAltitude : styles.categoryBadgeDistance
+                    ]}>
+                      <MaterialIcons 
+                        name={journey.category === 'altitude' ? 'landscape' : 'straighten'} 
+                        size={12} 
+                        color="#fff" 
+                      />
+                      <Text style={styles.categoryBadgeText}>
+                        {journey.category === 'altitude' ? 'Altitude' : 'Distance'}
+                      </Text>
+                    </View>
+                  )}
                 </View>
                 <MaterialIcons name="chevron-right" size={24} color="#6b7280" />
               </View>
@@ -308,37 +406,87 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
+    marginBottom: 20,
+  },
+  filtersCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  filterSection: {
     marginBottom: 16,
   },
-  filterContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
+  filterSectionLast: {
+    marginBottom: 0,
   },
-  filterButton: {
-    flex: 1,
+  filterSectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    borderWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
+    borderWidth: 1.5,
     borderColor: '#e5e7eb',
     gap: 6,
   },
-  filterButtonActive: {
-    backgroundColor: '#2563eb',
+  filterChipActive: {
+    backgroundColor: '#eff6ff',
     borderColor: '#2563eb',
   },
-  filterButtonText: {
-    fontSize: 14,
+  filterChipText: {
+    fontSize: 13,
     fontWeight: '600',
     color: '#6b7280',
   },
-  filterButtonTextActive: {
+  filterChipTextActive: {
+    color: '#2563eb',
+  },
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 8,
+    gap: 4,
+  },
+  categoryBadgeDistance: {
+    backgroundColor: '#3b82f6',
+  },
+  categoryBadgeAltitude: {
+    backgroundColor: '#10b981',
+  },
+  categoryBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
     color: '#fff',
+    textTransform: 'uppercase',
+  },
+  categoryInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   journeyCard: {
     backgroundColor: '#fff',

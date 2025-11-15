@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { User } from '@/types';
+import { User, UserJourney, HealthData } from '@/types';
 
 export interface Friend {
   id: string;
@@ -196,5 +196,135 @@ export const removeFriend = async (friendId: string): Promise<void> => {
     .or(`and(user_id.eq.${user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user.id})`);
 
   if (error) throw error;
+};
+
+/**
+ * Get a friend's profile with journeys and health data summary
+ */
+export interface FriendProfile {
+  profile: User;
+  activeJourneys: UserJourney[];
+  completedJourneys: UserJourney[];
+  healthDataSummary: {
+    totalSteps: number;
+    totalDistance: number;
+    totalElevation: number;
+    totalCalories: number;
+    daysActive: number;
+  };
+}
+
+export const getFriendProfile = async (friendId: string): Promise<FriendProfile & { isFriend: boolean }> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Check if they are friends (optional - allow viewing even if not friends)
+  const { data: friendship } = await supabase
+    .from('friends')
+    .select('*')
+    .or(`and(user_id.eq.${user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user.id})`)
+    .eq('status', 'accepted')
+    .maybeSingle();
+
+  const isFriend = !!friendship;
+
+  // Get friend's profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', friendId)
+    .single();
+
+  if (profileError) throw profileError;
+
+  // Get friend's journeys
+  const { data: userJourneys, error: journeysError } = await supabase
+    .from('user_journeys')
+    .select(`
+      *,
+      journey:journeys (
+        *,
+        milestones:journey_milestones (*)
+      )
+    `)
+    .eq('user_id', friendId)
+    .order('started_at', { ascending: false });
+
+  if (journeysError) throw journeysError;
+
+  // Sort milestones
+  const journeys = (userJourneys || []).map((uj: any) => {
+    if (uj.journey?.milestones) {
+      uj.journey.milestones.sort((a: any, b: any) => a.order_index - b.order_index);
+    }
+    return uj;
+  });
+
+  const activeJourneys = journeys.filter((uj: UserJourney) => uj.is_active);
+  const completedJourneys = journeys.filter((uj: UserJourney) => !uj.is_active && uj.completed_at);
+
+  // Get health data summary (last 30 days)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const startDate = thirtyDaysAgo.toISOString().split('T')[0];
+  const endDate = new Date().toISOString().split('T')[0];
+
+  const { data: healthData, error: healthError } = await supabase
+    .from('health_data')
+    .select('*')
+    .eq('user_id', friendId)
+    .gte('date', startDate)
+    .lte('date', endDate);
+
+  if (healthError) throw healthError;
+
+  // Calculate summary
+  const healthDataSummary = (healthData || []).reduce(
+    (acc, entry) => {
+      // Group by date and take max values (in case of multiple sources)
+      const dateKey = entry.date;
+      const existing = acc.byDate.get(dateKey);
+      
+      if (!existing) {
+        acc.byDate.set(dateKey, {
+          steps: entry.steps || 0,
+          distance: entry.distance || 0,
+          elevation: entry.elevation || 0,
+          calories: entry.calories || 0,
+        });
+      } else {
+        acc.byDate.set(dateKey, {
+          steps: Math.max(existing.steps, entry.steps || 0),
+          distance: Math.max(existing.distance, entry.distance || 0),
+          elevation: Math.max(existing.elevation, entry.elevation || 0),
+          calories: Math.max(existing.calories, entry.calories || 0),
+        });
+      }
+      
+      return acc;
+    },
+    { byDate: new Map<string, any>() }
+  );
+
+  const dailyData = Array.from(healthDataSummary.byDate.values());
+  const totalSteps = dailyData.reduce((sum, day) => sum + day.steps, 0);
+  const totalDistance = dailyData.reduce((sum, day) => sum + day.distance, 0);
+  const totalElevation = dailyData.reduce((sum, day) => sum + day.elevation, 0);
+  const totalCalories = dailyData.reduce((sum, day) => sum + day.calories, 0);
+  const daysActive = dailyData.filter(day => day.steps > 0 || day.distance > 0).length;
+
+  return {
+    profile: profile as User,
+    activeJourneys: activeJourneys as UserJourney[],
+    completedJourneys: completedJourneys as UserJourney[],
+    healthDataSummary: {
+      totalSteps,
+      totalDistance,
+      totalElevation,
+      totalCalories,
+      daysActive,
+    },
+    isFriend,
+  };
 };
 

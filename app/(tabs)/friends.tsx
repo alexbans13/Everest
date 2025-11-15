@@ -169,7 +169,11 @@ export default function FriendsScreen() {
           {!searching && searchResults.length > 0 && (
             <View style={styles.resultsContainer}>
               {searchResults.map((user) => (
-                <View key={user.id} style={styles.userCard}>
+                <TouchableOpacity
+                  key={user.id}
+                  style={styles.userCard}
+                  onPress={() => router.push(`/(tabs)/friend/${user.id}`)}
+                >
                   <View style={styles.userInfo}>
                     {user.avatar_url ? (
                       <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
@@ -191,14 +195,28 @@ export default function FriendsScreen() {
                       )}
                     </View>
                   </View>
-                  <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => handleSendFriendRequest(user.id)}
-                  >
-                    <MaterialIcons name="person-add" size={20} color="#2563eb" />
-                    <Text style={styles.addButtonText}>Add</Text>
-                  </TouchableOpacity>
-                </View>
+                  <View style={styles.cardActions}>
+                    <TouchableOpacity
+                      style={styles.viewButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        router.push(`/(tabs)/friend/${user.id}`);
+                      }}
+                    >
+                      <MaterialIcons name="visibility" size={18} color="#2563eb" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.addButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleSendFriendRequest(user.id);
+                      }}
+                    >
+                      <MaterialIcons name="person-add" size={20} color="#2563eb" />
+                      <Text style={styles.addButtonText}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
               ))}
             </View>
           )}
@@ -233,7 +251,11 @@ export default function FriendsScreen() {
                 if (!friendProfile) return null;
 
                 return (
-                  <View key={friend.id} style={styles.friendCard}>
+                  <TouchableOpacity
+                    key={friend.id}
+                    style={styles.friendCard}
+                    onPress={() => router.push(`/(tabs)/friend/${friendProfile.id}`)}
+                  >
                     <View style={styles.userInfo}>
                       {friendProfile.avatar_url ? (
                         <Image source={{ uri: friendProfile.avatar_url }} style={styles.avatar} />
@@ -247,13 +269,27 @@ export default function FriendsScreen() {
                         <Text style={styles.userEmail}>{friendProfile.email}</Text>
                       </View>
                     </View>
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => handleRemoveFriend(friendProfile.id)}
-                    >
-                      <MaterialIcons name="person-remove" size={20} color="#ef4444" />
-                    </TouchableOpacity>
-                  </View>
+                    <View style={styles.cardActions}>
+                      <TouchableOpacity
+                        style={styles.viewButton}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          router.push(`/(tabs)/friend/${friendProfile.id}`);
+                        }}
+                      >
+                        <MaterialIcons name="visibility" size={18} color="#2563eb" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFriend(friendProfile.id);
+                        }}
+                      >
+                        <MaterialIcons name="person-remove" size={20} color="#ef4444" />
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
                 );
               })}
             </View>
@@ -355,6 +391,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  viewButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#eff6ff',
   },
   userInfo: {
     flexDirection: 'row',

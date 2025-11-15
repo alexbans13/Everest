@@ -74,12 +74,39 @@ export default function ProgressScreen() {
     return `${meters.toFixed(0)} m`;
   };
 
+  const formatAltitude = (meters: number) => {
+    if (meters >= 1000) {
+      return `${(meters / 1000).toFixed(2)} km`;
+    }
+    return `${meters.toFixed(0)} m`;
+  };
+
+  const getTargetValue = () => {
+    if (!userJourney?.journey) return 0;
+    if (userJourney.journey.category === 'altitude' && userJourney.journey.target_altitude) {
+      return userJourney.journey.target_altitude;
+    }
+    return userJourney.journey.total_distance || 0;
+  };
+
   const getProgressPercentage = () => {
     if (!userJourney?.journey) return 0;
-    return Math.min(
-      (userJourney.current_distance / userJourney.journey.total_distance) * 100,
-      100
-    );
+    const target = getTargetValue();
+    return Math.min((userJourney.current_distance / target) * 100, 100);
+  };
+
+  const formatTarget = (value: number) => {
+    if (userJourney?.journey?.category === 'altitude') {
+      return formatAltitude(value);
+    }
+    return formatDistance(value);
+  };
+
+  const formatCurrent = (value: number) => {
+    if (userJourney?.journey?.category === 'altitude') {
+      return formatAltitude(value);
+    }
+    return formatDistance(value);
   };
 
   const getDaysActive = () => {
@@ -112,9 +139,8 @@ export default function ProgressScreen() {
 
   const progress = getProgressPercentage();
   const daysActive = getDaysActive();
-  const remaining = userJourney.journey
-    ? userJourney.journey.total_distance - userJourney.current_distance
-    : 0;
+  const target = getTargetValue();
+  const remaining = target - userJourney.current_distance;
 
   const milestones = userJourney.journey?.milestones || [];
   
@@ -158,16 +184,16 @@ export default function ProgressScreen() {
 
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{formatDistance(userJourney.current_distance)}</Text>
+              <Text style={styles.statValue}>{formatCurrent(userJourney.current_distance)}</Text>
               <Text style={styles.statLabel}>Completed</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{formatDistance(remaining)}</Text>
+              <Text style={styles.statValue}>{formatTarget(Math.max(0, remaining))}</Text>
               <Text style={styles.statLabel}>Remaining</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{formatDistance(userJourney.journey?.total_distance || 0)}</Text>
-              <Text style={styles.statLabel}>Total</Text>
+              <Text style={styles.statValue}>{formatTarget(target)}</Text>
+              <Text style={styles.statLabel}>{userJourney.journey?.category === 'altitude' ? 'Target Altitude' : 'Total'}</Text>
             </View>
           </View>
         </View>
@@ -181,14 +207,14 @@ export default function ProgressScreen() {
             </View>
           </View>
 
-          <View style={styles.infoRow}>
+            <View style={styles.infoRow}>
             <MaterialIcons name="trending-up" size={24} color="#2563eb" />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Average per Day</Text>
               <Text style={styles.infoValue}>
                 {daysActive > 0
-                  ? formatDistance(userJourney.current_distance / daysActive)
-                  : formatDistance(0)}
+                  ? formatCurrent(userJourney.current_distance / daysActive)
+                  : formatCurrent(0)}
               </Text>
             </View>
           </View>

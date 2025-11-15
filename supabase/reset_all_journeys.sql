@@ -9,15 +9,15 @@ DELETE FROM journey_milestones;
 DELETE FROM journeys;
 
 -- Step 3: Re-insert all journeys with complete data
-INSERT INTO journeys (name, description, total_distance, start_location, end_location, difficulty, is_premium, image_url) VALUES
-  ('Mount Everest Base Camp', 'Trek to the base camp of the world''s highest mountain', 130000, 'Lukla, Nepal', 'Everest Base Camp, Nepal', 'hard', false, 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=800&h=600&fit=crop&q=80'),
-  ('Pacific Crest Trail', 'Hike the famous trail from Mexico to Canada', 4265000, 'Campo, California', 'Manning Park, British Columbia', 'extreme', true, 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&q=80'),
-  ('Appalachian Trail', 'Complete the iconic East Coast trail', 3500000, 'Springer Mountain, Georgia', 'Mount Katahdin, Maine', 'extreme', false, 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop&q=80'),
-  ('Cross Country USA', 'Walk across the United States', 4500000, 'New York, NY', 'Los Angeles, CA', 'extreme', false, 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&h=600&fit=crop&q=80'),
-  ('Camino de Santiago', 'The famous pilgrimage route in Spain', 780000, 'Saint-Jean-Pied-de-Port, France', 'Santiago de Compostela, Spain', 'medium', false, 'https://images.unsplash.com/photo-1539650116574-75c0c6d73a6e?w=800&h=600&fit=crop&q=80'),
-  ('Great Wall of China', 'Walk along the Great Wall', 21000000, 'Shanhai Pass', 'Jiayuguan Pass', 'extreme', true, 'https://images.unsplash.com/photo-1512529904538-658fdee0e0a6?w=800&h=600&fit=crop&q=80'),
-  ('London to Paris', 'Walk from London to Paris', 350000, 'London, UK', 'Paris, France', 'medium', false, 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&h=600&fit=crop&q=80'),
-  ('Tokyo Marathon Route', 'Complete the Tokyo Marathon distance 10 times', 421950, 'Tokyo, Japan', 'Tokyo, Japan', 'easy', false, 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&h=600&fit=crop&q=80');
+INSERT INTO journeys (name, description, total_distance, start_location, end_location, difficulty, is_premium, image_url, category, target_altitude) VALUES
+  ('Mount Everest Base Camp', 'Trek to the base camp of the world''s highest mountain', 130000, 'Lukla, Nepal', 'Everest Base Camp, Nepal', 'hard', false, 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=800&h=600&fit=crop&q=80', 'altitude', 8848),
+  ('Pacific Crest Trail', 'Hike the famous trail from Mexico to Canada', 4265000, 'Campo, California', 'Manning Park, British Columbia', 'extreme', true, 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&q=80', 'distance', NULL),
+  ('Appalachian Trail', 'Complete the iconic East Coast trail', 3500000, 'Springer Mountain, Georgia', 'Mount Katahdin, Maine', 'extreme', false, 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop&q=80', 'distance', NULL),
+  ('Cross Country USA', 'Walk across the United States', 4500000, 'New York, NY', 'Los Angeles, CA', 'extreme', false, 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&h=600&fit=crop&q=80', 'distance', NULL),
+  ('Camino de Santiago', 'The famous pilgrimage route in Spain', 780000, 'Saint-Jean-Pied-de-Port, France', 'Santiago de Compostela, Spain', 'medium', false, 'https://images.unsplash.com/photo-1539650116574-75c0c6d73a6e?w=800&h=600&fit=crop&q=80', 'distance', NULL),
+  ('Great Wall of China', 'Walk along the Great Wall', 21000000, 'Shanhai Pass', 'Jiayuguan Pass', 'extreme', true, 'https://images.unsplash.com/photo-1512529904538-658fdee0e0a6?w=800&h=600&fit=crop&q=80', 'distance', NULL),
+  ('London to Paris', 'Walk from London to Paris', 350000, 'London, UK', 'Paris, France', 'medium', false, 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&h=600&fit=crop&q=80', 'distance', NULL),
+  ('Tokyo Marathon Route', 'Complete the Tokyo Marathon distance 10 times', 421950, 'Tokyo, Japan', 'Tokyo, Japan', 'easy', false, 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&h=600&fit=crop&q=80', 'distance', NULL);
 
 -- Step 4: Insert milestones for Mount Everest Base Camp (130km total)
 INSERT INTO journey_milestones (journey_id, name, description, distance_from_start, order_index)

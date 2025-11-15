@@ -1,7 +1,10 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Platform } from 'react-native';
 
 export default function TabsLayout() {
+  const isWeb = Platform.OS === 'web';
+
   return (
     <Tabs
       screenOptions={{
@@ -13,7 +16,7 @@ export default function TabsLayout() {
           backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#e5e7eb',
-          height: 60,
+          height: isWeb ? 70 : 60,
           paddingBottom: 8,
           paddingTop: 8,
           paddingLeft: 0,
@@ -23,7 +26,9 @@ export default function TabsLayout() {
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
           shadowRadius: 4,
+          flexDirection: 'row',
           justifyContent: 'space-around',
+          alignItems: 'center',
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -31,12 +36,20 @@ export default function TabsLayout() {
           marginTop: 4,
         },
         tabBarItemStyle: {
-          flex: 0,
-          flexBasis: '20%',
-          width: '20%',
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingVertical: 4,
+          flex: isWeb ? 1 : 0,
+          ...(isWeb ? {
+            minWidth: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 8,
+            paddingHorizontal: 4,
+          } : {
+            flexBasis: '20%',
+            width: '20%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 4,
+          }),
         },
         tabBarIconStyle: {
           marginBottom: 0,
@@ -66,7 +79,7 @@ export default function TabsLayout() {
         options={{
           title: 'Activity',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="fitness-center" size={size} color={color} />
+            <MaterialIcons name="directions-walk" size={size} color={color} />
           ),
         }}
       />
@@ -106,6 +119,13 @@ export default function TabsLayout() {
         name="payment/[id]"
         options={{
           title: 'Purchase Journey',
+          tabBarButton: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="friend/[id]"
+        options={{
+          title: 'Friend Profile',
           tabBarButton: () => null,
         }}
       />

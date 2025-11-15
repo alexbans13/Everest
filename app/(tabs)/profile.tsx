@@ -90,7 +90,13 @@ export default function ProfileScreen() {
         
         // Update profile with new avatar URL
         const updated = await updateProfile({ avatar_url: avatarUrl });
+        
+        // Force state update and reload profile to ensure image displays
         setUser(updated);
+        
+        // Reload profile to get the latest data
+        await loadProfile();
+        
         Alert.alert('Success', 'Profile picture updated!');
       }
     } catch (error: any) {
@@ -173,7 +179,11 @@ export default function ProfileScreen() {
             disabled={uploadingImage}
           >
             {user?.avatar_url ? (
-              <Image source={{ uri: user.avatar_url }} style={styles.avatarImage} />
+              <Image 
+                source={{ uri: user.avatar_url }} 
+                style={styles.avatarImage}
+                key={user.avatar_url}
+              />
             ) : (
               <MaterialIcons name="person" size={48} color="#2563eb" />
             )}

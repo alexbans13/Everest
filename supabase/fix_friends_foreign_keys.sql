@@ -9,8 +9,9 @@ BEGIN
     SELECT 1 FROM information_schema.table_constraints 
     WHERE constraint_name = 'friends_user_id_fkey' 
     AND table_name = 'friends'
+    AND table_schema = 'public'
   ) THEN
-    ALTER TABLE friends DROP CONSTRAINT friends_user_id_fkey;
+    ALTER TABLE friends DROP CONSTRAINT IF EXISTS friends_user_id_fkey;
   END IF;
 
   -- Drop foreign key constraint on friend_id if it exists
@@ -18,17 +19,37 @@ BEGIN
     SELECT 1 FROM information_schema.table_constraints 
     WHERE constraint_name = 'friends_friend_id_fkey' 
     AND table_name = 'friends'
+    AND table_schema = 'public'
   ) THEN
-    ALTER TABLE friends DROP CONSTRAINT friends_friend_id_fkey;
+    ALTER TABLE friends DROP CONSTRAINT IF EXISTS friends_friend_id_fkey;
   END IF;
 END $$;
 
--- Add new foreign key constraints referencing profiles
-ALTER TABLE friends 
-  ADD CONSTRAINT friends_user_id_fkey 
-  FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
+-- Add new foreign key constraints referencing profiles (only if they don't exist)
+DO $$
+BEGIN
+  -- Add constraint on user_id if it doesn't exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'friends_user_id_fkey' 
+    AND table_name = 'friends'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE friends 
+      ADD CONSTRAINT friends_user_id_fkey 
+      FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
+  END IF;
 
-ALTER TABLE friends 
-  ADD CONSTRAINT friends_friend_id_fkey 
-  FOREIGN KEY (friend_id) REFERENCES profiles(id) ON DELETE CASCADE;
+  -- Add constraint on friend_id if it doesn't exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'friends_friend_id_fkey' 
+    AND table_name = 'friends'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE friends 
+      ADD CONSTRAINT friends_friend_id_fkey 
+      FOREIGN KEY (friend_id) REFERENCES profiles(id) ON DELETE CASCADE;
+  END IF;
+END $$;
 

@@ -59,9 +59,34 @@ export default function HomeScreen() {
     return `${meters.toFixed(0)} m`;
   };
 
+  const formatAltitude = (meters: number) => {
+    if (meters >= 1000) {
+      return `${(meters / 1000).toFixed(2)} km`;
+    }
+    return `${meters.toFixed(0)} m`;
+  };
+
   const getProgressPercentage = (journey: UserJourney) => {
     if (!journey?.journey) return 0;
-    return Math.min((journey.current_distance / journey.journey.total_distance) * 100, 100);
+    const target = journey.journey.category === 'altitude' && journey.journey.target_altitude
+      ? journey.journey.target_altitude
+      : journey.journey.total_distance;
+    return Math.min((journey.current_distance / target) * 100, 100);
+  };
+
+  const getTargetValue = (journey: UserJourney) => {
+    if (!journey?.journey) return 0;
+    if (journey.journey.category === 'altitude' && journey.journey.target_altitude) {
+      return journey.journey.target_altitude;
+    }
+    return journey.journey.total_distance || 0;
+  };
+
+  const formatTarget = (journey: UserJourney, value: number) => {
+    if (journey?.journey?.category === 'altitude') {
+      return formatAltitude(value);
+    }
+    return formatDistance(value);
   };
 
   if (loading) {
@@ -98,8 +123,10 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.progressText}>
                     <Text style={styles.progressLabel}>
-                      {formatDistance(journey.current_distance)} /{' '}
-                      {formatDistance(journey.journey?.total_distance || 0)}
+                      {journey.journey?.category === 'altitude' 
+                        ? formatAltitude(journey.current_distance)
+                        : formatDistance(journey.current_distance)} /{' '}
+                      {formatTarget(journey, getTargetValue(journey))}
                     </Text>
                     <Text style={styles.progressPercent}>{getProgressPercentage(journey).toFixed(1)}%</Text>
                   </View>

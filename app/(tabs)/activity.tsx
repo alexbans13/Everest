@@ -235,9 +235,12 @@ export default function ActivityScreen() {
     return data;
   };
 
-  const loadActivityData = useCallback(async (incremental = false) => {
+  const loadActivityData = useCallback(async (incremental = false, isRefresh = false) => {
     try {
-      setLoading(true);
+      // Only show full-page loading on initial load, not on refresh
+      if (!isRefresh) {
+        setLoading(true);
+      }
       
       let data: ActivityData[];
       
@@ -259,6 +262,9 @@ export default function ActivityScreen() {
         
         // Update journey progress based on synced health data
         await syncJourneyProgressFromHealthData();
+        
+        // After syncing, reload all data from database to get updated values
+        data = await loadActivityDataFromDB();
       } else {
         // Just load from database (no syncing)
         data = await loadActivityDataFromDB();
@@ -283,7 +289,7 @@ export default function ActivityScreen() {
 
   const handleRefresh = async () => {
     setRefreshingData(true);
-    await loadActivityData(true);
+    await loadActivityData(true, true); // Pass true for isRefresh to prevent full-page loading
   };
 
   const formatDate = (dateString: string) => {

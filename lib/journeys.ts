@@ -281,28 +281,59 @@ const syncSingleJourneyProgress = async (targetJourney: UserJourney): Promise<Us
 
   // Get journey start timestamp
   const startTimestamp = new Date(targetJourney.started_at);
+  
+  // Get the date portion of the start timestamp (normalized to midnight)
   const startDate = new Date(startTimestamp);
   startDate.setHours(0, 0, 0, 0);
   const startDateString = startDate.toISOString().split('T')[0];
   
-  // Calculate the first date AFTER the journey started
-  // Since health data is stored by date (not time), we exclude the start date
-  // to ensure we only count activity that occurred AFTER the journey was started
-  const firstCountedDate = new Date(startDate);
-  firstCountedDate.setDate(firstCountedDate.getDate() + 1);
+  // Get today's date (normalized to midnight)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayString = today.toISOString().split('T')[0];
+  
+  // Determine the first date to count health data from
+  // If journey started today, we exclude today entirely and start counting from tomorrow
+  // If journey started on a previous day, we exclude the start date and count from the next day
+  let firstCountedDate: Date;
+  if (startDateString === todayString) {
+    // Journey started today - exclude today, start counting from tomorrow
+    firstCountedDate = new Date(today);
+    firstCountedDate.setDate(firstCountedDate.getDate() + 1);
+  } else {
+    // Journey started on a previous day - exclude start date, count from next day
+    firstCountedDate = new Date(startDate);
+    firstCountedDate.setDate(firstCountedDate.getDate() + 1);
+  }
+  
   const firstCountedDateString = firstCountedDate.toISOString().split('T')[0];
   
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
-  const todayString = today.toISOString().split('T')[0];
+  // If the first counted date is in the future, there's no data to count yet
+  if (firstCountedDateString > todayString) {
+    console.log('Journey started today or in the future - no progress to count yet');
+    // Ensure progress is set to 0
+    await updateJourneyProgress(targetJourney.id, 0);
+    return await supabase
+      .from('user_journeys')
+      .select(`
+        *,
+        journey:journeys (*)
+      `)
+      .eq('id', targetJourney.id)
+      .single()
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return data;
+      });
+  }
 
   console.log('Syncing journey progress:', {
     userJourneyId: targetJourney.id,
     journeyId: targetJourney.journey_id,
     startedAt: targetJourney.started_at,
     startDate: startDateString,
+    today: todayString,
     firstCountedDate: firstCountedDateString,
-    endDate: todayString,
   });
 
   // Get all health data from the day AFTER the journey started
@@ -323,7 +354,8 @@ const syncSingleJourneyProgress = async (targetJourney: UserJourney): Promise<Us
     // Ensure date is in YYYY-MM-DD format
     const dateKey = typeof data.date === 'string' ? data.date.split('T')[0].split(' ')[0] : data.date;
     // Only count data from the day after the journey started (we already filtered in the query, but double-check)
-    if (dateKey >= firstCountedDateString) {
+    // This ensures we never count data from the start date itself
+    if (dateKey > startDateString && dateKey >= firstCountedDateString) {
       const distance = data.distance != null ? Number(data.distance) : 0;
       const existing = distanceByDate.get(dateKey) || 0;
       distanceByDate.set(dateKey, Math.max(existing, distance));

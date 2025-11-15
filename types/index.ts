@@ -21,7 +21,7 @@ export interface Journey {
   id: string;
   name: string;
   description: string;
-  total_distance: number; // in meters
+  total_distance: number; // in meters (for distance challenges)
   image_url?: string;
   start_location: string;
   end_location: string;
@@ -29,6 +29,8 @@ export interface Journey {
   is_premium?: boolean;
   created_at: string;
   milestones?: JourneyMilestone[];
+  category?: 'distance' | 'altitude';
+  target_altitude?: number; // in meters (for altitude challenges)
 }
 
 export interface UserJourney {

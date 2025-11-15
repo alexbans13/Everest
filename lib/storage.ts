@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export const uploadProfileImage = async (uri: string, userId: string): Promise<string> => {
   try {
@@ -15,7 +15,7 @@ export const uploadProfileImage = async (uri: string, userId: string): Promise<s
 
     // Read file as base64 (React Native compatible)
     const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
+      encoding: 'base64',
     });
 
     // Convert base64 to ArrayBuffer for Supabase
