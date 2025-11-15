@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getJourneyById, startJourney, getUserJourneys } from '@/lib/journeys';
 import { Journey, JourneyMilestone, UserJourney } from '@/types';
 import { MaterialIcons } from '@expo/vector-icons';
+import GradientButton from '@/components/GradientButton';
 
 export default function JourneyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -261,20 +263,13 @@ export default function JourneyDetailScreen() {
         )}
 
         {!userJourney && (
-          <TouchableOpacity
-            style={[styles.startButton, starting && styles.startButtonDisabled]}
+          <GradientButton
             onPress={handleStartJourney}
+            title="Start Journey"
+            icon="play-arrow"
             disabled={starting}
-          >
-            {starting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.startButtonText}>Start Journey</Text>
-                <MaterialIcons name="play-arrow" size={24} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
+            loading={starting}
+          />
         )}
       </View>
     </ScrollView>
@@ -412,23 +407,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
     lineHeight: 24,
-  },
-  startButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  startButtonDisabled: {
-    opacity: 0.6,
-  },
-  startButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
   },
   errorText: {
     fontSize: 16,

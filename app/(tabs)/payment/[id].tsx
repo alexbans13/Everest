@@ -116,23 +116,14 @@ export default function PaymentScreen() {
           <Text style={styles.pricingAmount}>€{price.toFixed(2)}</Text>
         </View>
 
-        <TouchableOpacity
-          style={[styles.purchaseButton, processing && styles.purchaseButtonDisabled]}
+        <GradientButton
           onPress={handlePurchase}
+          title={`Purchase for €${price.toFixed(2)}`}
+          icon="payment"
           disabled={processing}
-        >
-          {processing ? (
-            <>
-              <ActivityIndicator size="small" color="#fff" />
-              <Text style={styles.purchaseButtonText}>Processing...</Text>
-            </>
-          ) : (
-            <>
-              <MaterialIcons name="payment" size={20} color="#fff" />
-              <Text style={styles.purchaseButtonText}>Purchase for €{price.toFixed(2)}</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          loading={processing}
+          variant="secondary"
+        />
 
         <TouchableOpacity
           style={styles.cancelButton}
@@ -265,24 +256,6 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: 'bold',
     color: '#2563eb',
-  },
-  purchaseButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  purchaseButtonDisabled: {
-    opacity: 0.6,
-  },
-  purchaseButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
   },
   cancelButton: {
     padding: 16,

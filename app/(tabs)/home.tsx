@@ -9,9 +9,11 @@ import {
   RefreshControl,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getActiveJourneys } from '@/lib/journeys';
 import { UserJourney } from '@/types';
 import { MaterialIcons } from '@expo/vector-icons';
+import GradientButton from '@/components/GradientButton';
 
 export default function HomeScreen() {
   const [activeJourneys, setActiveJourneys] = useState<UserJourney[]>([]);
@@ -117,7 +119,10 @@ export default function HomeScreen() {
 
                 <View style={styles.progressContainer}>
                   <View style={styles.progressBar}>
-                    <View
+                    <LinearGradient
+                      colors={['#3b82f6', '#2563eb', '#1d4ed8']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
                       style={[styles.progressFill, { width: `${getProgressPercentage(journey)}%` }]}
                     />
                   </View>
@@ -132,13 +137,11 @@ export default function HomeScreen() {
                   </View>
                 </View>
 
-                <TouchableOpacity
-                  style={styles.viewButton}
+                <GradientButton
                   onPress={() => router.push(`/(tabs)/progress/${journey.id}`)}
-                >
-                  <Text style={styles.viewButtonText}>View Progress</Text>
-                  <MaterialIcons name="arrow-forward" size={20} color="#fff" />
-                </TouchableOpacity>
+                  title="View Progress"
+                  icon="arrow-forward"
+                />
               </View>
             ))}
           </>
@@ -149,12 +152,11 @@ export default function HomeScreen() {
             <Text style={styles.emptyText}>
               Start a new journey to begin tracking your progress!
             </Text>
-            <TouchableOpacity
-              style={styles.browseButton}
+            <GradientButton
               onPress={() => router.push('/(tabs)/journeys')}
-            >
-              <Text style={styles.browseButtonText}>Browse Journeys</Text>
-            </TouchableOpacity>
+              title="Browse Journeys"
+              icon="explore"
+            />
           </View>
         )}
 
@@ -240,7 +242,6 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#2563eb',
     borderRadius: 6,
   },
   progressText: {
@@ -256,20 +257,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#2563eb',
-  },
-  viewButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  viewButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginRight: 8,
   },
   emptyCard: {
     backgroundColor: '#fff',
@@ -295,17 +282,6 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textAlign: 'center',
     marginBottom: 24,
-  },
-  browseButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-  },
-  browseButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
   quickActions: {
     marginTop: 8,

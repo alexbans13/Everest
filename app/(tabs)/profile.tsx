@@ -17,6 +17,7 @@ import { uploadProfileImage } from '@/lib/storage';
 import { resetAllUserData } from '@/lib/reset';
 import { User } from '@/types';
 import { MaterialIcons } from '@expo/vector-icons';
+import GradientButton from '@/components/GradientButton';
 
 export default function ProfileScreen() {
   const [user, setUser] = useState<User | null>(null);
@@ -287,17 +288,14 @@ export default function ProfileScreen() {
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.saveButton]}
-                onPress={handleSave}
-                disabled={saving}
-              >
-                {saving ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Save</Text>
-                )}
-              </TouchableOpacity>
+              <View style={styles.saveButtonContainer}>
+                <GradientButton
+                  onPress={handleSave}
+                  title="Save"
+                  disabled={saving}
+                  loading={saving}
+                />
+              </View>
             </View>
           ) : (
             <TouchableOpacity
@@ -487,7 +485,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f3f4f6',
   },
-  saveButton: {
+  saveButtonContainer: {
     flex: 1,
   },
   buttonText: {

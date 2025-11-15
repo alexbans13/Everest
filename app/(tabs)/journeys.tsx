@@ -10,12 +10,14 @@ import {
   Image,
 } from 'react-native';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getAvailableJourneys, startJourney } from '@/lib/journeys';
 import { Journey } from '@/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
+import GradientButton from '@/components/GradientButton';
 
 type JourneyWithStatus = Journey & { user_journey_id?: string; is_active?: boolean };
 type FilterType = 'all' | 'free' | 'premium';
@@ -341,40 +343,32 @@ export default function JourneysScreen() {
                 </Text>
               </View>
               {!journey.is_active && (
-                <TouchableOpacity
-                  style={[
-                    styles.startButton,
-                    startingJourney === journey.id && styles.startButtonDisabled,
-                  ]}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    handleStartJourney(journey.id, journey.user_journey_id, journey.is_premium);
-                  }}
-                  disabled={startingJourney === journey.id}
-                >
-                  {startingJourney === journey.id ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <>
-                      <Text style={styles.startButtonText}>Start Journey</Text>
-                      <MaterialIcons name="play-arrow" size={20} color="#fff" />
-                    </>
-                  )}
-                </TouchableOpacity>
+                <View style={styles.buttonContainer}>
+                  <GradientButton
+                    onPress={(e) => {
+                      e?.stopPropagation?.();
+                      handleStartJourney(journey.id, journey.user_journey_id, journey.is_premium);
+                    }}
+                    title="Start Journey"
+                    icon="play-arrow"
+                    disabled={startingJourney === journey.id}
+                    loading={startingJourney === journey.id}
+                  />
+                </View>
               )}
               {journey.is_active && (
-                <TouchableOpacity
-                  style={styles.viewProgressButton}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    if (journey.user_journey_id) {
-                      router.push(`/(tabs)/progress/${journey.user_journey_id}`);
-                    }
-                  }}
-                >
-                  <Text style={styles.viewProgressButtonText}>View Progress</Text>
-                  <MaterialIcons name="arrow-forward" size={20} color="#2563eb" />
-                </TouchableOpacity>
+                <View style={styles.buttonContainer}>
+                  <GradientButton
+                    onPress={(e) => {
+                      e?.stopPropagation?.();
+                      if (journey.user_journey_id) {
+                        router.push(`/(tabs)/progress/${journey.user_journey_id}`);
+                      }
+                    }}
+                    title="View Progress"
+                    icon="arrow-forward"
+                  />
+                </View>
               )}
             </TouchableOpacity>
           ))
@@ -593,40 +587,10 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginLeft: 4,
   },
-  startButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  buttonContainer: {
     marginHorizontal: 20,
     marginBottom: 20,
-  },
-  startButtonDisabled: {
-    opacity: 0.6,
-  },
-  startButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginRight: 8,
-  },
-  viewProgressButton: {
-    backgroundColor: '#e0e7ff',
-    borderRadius: 12,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 20,
-    marginBottom: 20,
-  },
-  viewProgressButtonText: {
-    color: '#2563eb',
-    fontSize: 16,
-    fontWeight: '600',
-    marginRight: 8,
+    marginTop: 12,
   },
   emptyContainer: {
     alignItems: 'center',

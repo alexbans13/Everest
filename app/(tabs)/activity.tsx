@@ -10,7 +10,9 @@ import {
   Alert,
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
+import GradientButton from '@/components/GradientButton';
 import { syncMultipleHealthData, getHealthData, ensureHealthDataRecords } from '@/lib/health';
 import { syncJourneyProgressFromHealthData } from '@/lib/journeys';
 import { getCurrentUser } from '@/lib/auth';
@@ -400,23 +402,13 @@ export default function ActivityScreen() {
         </View>
 
         {/* Refresh Button */}
-        <TouchableOpacity
-          style={[styles.refreshButton, refreshingData && styles.refreshButtonDisabled]}
+        <GradientButton
           onPress={handleRefresh}
+          title={refreshingData ? "Refreshing..." : "Refresh Data"}
+          icon={refreshingData ? undefined : "refresh"}
           disabled={refreshingData}
-        >
-          {refreshingData ? (
-            <>
-              <ActivityIndicator size="small" color="#fff" />
-              <Text style={styles.refreshButtonText}>Refreshing...</Text>
-            </>
-          ) : (
-            <>
-              <MaterialIcons name="refresh" size={20} color="#fff" />
-              <Text style={styles.refreshButtonText}>Refresh Data</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          loading={refreshingData}
+        />
 
         {/* Daily Activity List */}
         <View style={styles.dailySection}>
@@ -528,24 +520,6 @@ const styles = StyleSheet.create({
   summaryAverage: {
     fontSize: 12,
     color: '#9ca3af',
-  },
-  refreshButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 24,
-  },
-  refreshButtonDisabled: {
-    opacity: 0.6,
-  },
-  refreshButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
   dailySection: {
     marginTop: 8,

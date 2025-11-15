@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getUserJourneys, syncJourneyProgressFromHealthData } from '@/lib/journeys';
 import { UserJourney, JourneyMilestone } from '@/types';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -179,7 +180,12 @@ export default function ProgressScreen() {
           </View>
 
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progress}%` }]} />
+            <LinearGradient
+              colors={['#3b82f6', '#2563eb', '#1d4ed8']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: `${progress}%` }]}
+            />
           </View>
 
           <View style={styles.statsGrid}>
@@ -286,7 +292,10 @@ export default function ProgressScreen() {
                     </Text>
                     <View style={styles.milestoneProgress}>
                       <View style={styles.milestoneProgressBar}>
-                        <View
+                        <LinearGradient
+                          colors={reached ? ['#10b981', '#059669', '#047857'] : ['#3b82f6', '#2563eb', '#1d4ed8']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
                           style={[
                             styles.milestoneProgressFill,
                             {
@@ -407,7 +416,6 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#2563eb',
     borderRadius: 8,
   },
   statsGrid: {
@@ -585,7 +593,6 @@ const styles = StyleSheet.create({
   },
   milestoneProgressFill: {
     height: '100%',
-    backgroundColor: '#2563eb',
     borderRadius: 3,
   },
   milestoneDistance: {
