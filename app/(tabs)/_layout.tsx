@@ -1,80 +1,112 @@
-import { Tabs, Redirect } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAuthStore } from '../../store/authStore';
-import { useEffect } from 'react';
-import { router } from 'expo-router';
+import { Tabs } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
-  const { user, initialized } = useAuthStore();
-
-  useEffect(() => {
-    if (initialized && !user) {
-      router.replace('/(auth)/login');
-    }
-  }, [initialized, user]);
-
-  if (!initialized) {
-    return null;
-  }
-
-  if (!user) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
   return (
     <Tabs
       screenOptions={{
         headerShown: true,
-        tabBarActiveTintColor: '#6200ee',
-        tabBarInactiveTintColor: '#757575',
+        tabBarActiveTintColor: '#2563eb',
+        tabBarInactiveTintColor: '#6b7280',
+        tabBarShowLabel: true,
         tabBarStyle: {
-          backgroundColor: '#ffffff',
+          backgroundColor: '#fff',
           borderTopWidth: 1,
-          borderTopColor: '#e0e0e0',
+          borderTopColor: '#e5e7eb',
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
+          paddingLeft: 0,
+          paddingRight: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          justifyContent: 'space-around',
         },
-        headerStyle: {
-          backgroundColor: '#6200ee',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginTop: 4,
         },
-        headerTintColor: '#ffffff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
+        tabBarItemStyle: {
+          flex: 0,
+          flexBasis: '20%',
+          width: '20%',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 4,
+        },
+        tabBarIconStyle: {
+          marginBottom: 0,
         },
       }}
     >
       <Tabs.Screen
-        name="journeys"
+        name="home"
         options={{
-          title: '🏔️ Journeys',
-          headerTitle: 'Choose Your Journey',
-          tabBarLabel: 'Journeys',
+          title: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="map-outline" size={size} color={color} />
+            <MaterialIcons name="home" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="active"
+        name="journeys"
         options={{
-          title: '🚶 Active Journey',
-          headerTitle: 'My Progress',
-          tabBarLabel: 'Active',
+          title: 'Journeys',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="walk" size={size} color={color} />
+            <MaterialIcons name="explore" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="activity"
+        options={{
+          title: 'Activity',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="fitness-center" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="friends"
+        options={{
+          title: 'Friends',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="people" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: '👤 Profile',
-          headerTitle: 'My Profile',
-          tabBarLabel: 'Profile',
+          title: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-outline" size={size} color={color} />
+            <MaterialIcons name="person" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="journey/[id]"
+        options={{
+          title: 'Journey Details',
+          tabBarButton: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="progress/[id]"
+        options={{
+          title: 'Journey Progress',
+          tabBarButton: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="payment/[id]"
+        options={{
+          title: 'Purchase Journey',
+          tabBarButton: () => null,
         }}
       />
     </Tabs>

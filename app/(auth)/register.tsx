@@ -1,83 +1,42 @@
 import { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { Link, router } from 'expo-router';
-import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../store/authStore';
+import { signUp } from '@/lib/auth';
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showError, setShowError] = useState(false);
-  const { setSession, setUser } = useAuthStore();
 
   const handleRegister = async () => {
-    console.log('[AUTH] Registration attempt started');
     if (!email || !password || !fullName) {
-      console.warn('[AUTH] Registration validation failed: missing fields');
-      setError('Please fill in all fields');
-      setShowError(true);
+      Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     if (password.length < 6) {
-      console.warn('[AUTH] Registration validation failed: password too short');
-      setError('Password must be at least 6 characters');
-      setShowError(true);
+      Alert.alert('Error', 'Password must be at least 6 characters');
       return;
     }
 
     setLoading(true);
-    setError(null);
-
     try {
-      console.log('[AUTH] Attempting to sign up with Supabase');
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-
-      if (authError) {
-        console.error('[AUTH] Sign up error:', authError);
-        throw authError;
-      }
-
-      if (data.session && data.user) {
-        console.log('[AUTH] Sign up successful, creating profile:', { userId: data.user.id, email: data.user.email });
-        // Create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: data.user.id,
-            email: data.user.email!,
-            full_name: fullName,
-          });
-
-        if (profileError) {
-          console.error('[AUTH] Error creating profile:', profileError);
-        } else {
-          console.log('[AUTH] Profile created successfully');
-        }
-
-        setSession(data.session);
-        setUser(data.user);
-        console.log('[AUTH] Navigating to journeys screen');
-        router.replace('/(tabs)/journeys');
-      } else {
-        console.warn('[AUTH] Sign up returned no session or user');
-      }
-    } catch (err: any) {
-      console.error('[AUTH] Registration exception:', err);
-      setError(err.message || 'Failed to sign up');
-      setShowError(true);
+      await signUp(email, password, fullName);
+      Alert.alert('Success', 'Account created! Please log in.');
+      router.replace('/(auth)/login');
+    } catch (error: any) {
+      Alert.alert('Registration Failed', error.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -90,69 +49,54 @@ export default function RegisterScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-          <Text variant="headlineLarge" style={styles.title}>
-            Create Account
-          </Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>
-            Start your journey today
-          </Text>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Start your journey today</Text>
 
-          <TextInput
-            label="Full Name"
-            value={fullName}
-            onChangeText={setFullName}
-            mode="outlined"
-            style={styles.input}
-            disabled={loading}
-          />
+          <View style={styles.form}>
+            <TextInput
+              style={styles.input}
+              placeholder="Full Name"
+              value={fullName}
+              onChangeText={setFullName}
+              autoCapitalize="words"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+            />
 
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            mode="outlined"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-            disabled={loading}
-          />
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>{loading ? 'Creating...' : 'Sign Up'}</Text>
+            </TouchableOpacity>
 
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            mode="outlined"
-            secureTextEntry
-            style={styles.input}
-            disabled={loading}
-          />
-
-          <Button
-            mode="contained"
-            onPress={handleRegister}
-            loading={loading}
-            disabled={loading}
-            style={styles.button}
-          >
-            Sign Up
-          </Button>
-
-          <View style={styles.linkContainer}>
-            <Text>Already have an account? </Text>
-            <Link href="/(auth)/login" asChild>
-              <Text style={styles.link}>Sign In</Text>
-            </Link>
+            <View style={styles.linkContainer}>
+              <Text style={styles.linkText}>Already have an account? </Text>
+              <Link href="/(auth)/login" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.link}>Login</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </View>
         </View>
       </ScrollView>
-
-      <Snackbar
-        visible={showError}
-        onDismiss={() => setShowError(false)}
-        duration={3000}
-      >
-        {error}
-      </Snackbar>
     </KeyboardAvoidingView>
   );
 }
@@ -160,38 +104,69 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
   },
   content: {
+    flex: 1,
+    justifyContent: 'center',
     padding: 20,
   },
   title: {
-    marginBottom: 8,
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#2563eb',
     textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
-    marginBottom: 32,
+    fontSize: 18,
+    color: '#6b7280',
     textAlign: 'center',
-    opacity: 0.7,
+    marginBottom: 40,
+  },
+  form: {
+    width: '100%',
   },
   input: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   button: {
+    backgroundColor: '#2563eb',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
     marginTop: 8,
-    marginBottom: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
   },
   linkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginTop: 24,
+  },
+  linkText: {
+    color: '#6b7280',
+    fontSize: 16,
   },
   link: {
-    color: '#6200ee',
-    fontWeight: 'bold',
+    color: '#2563eb',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

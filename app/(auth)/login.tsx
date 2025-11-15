@@ -1,55 +1,34 @@
 import { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { Link, router } from 'expo-router';
-import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../store/authStore';
+import { signIn } from '@/lib/auth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showError, setShowError] = useState(false);
-  const { setSession, setUser } = useAuthStore();
 
   const handleLogin = async () => {
-    console.log('[AUTH] Login attempt started');
     if (!email || !password) {
-      console.warn('[AUTH] Login validation failed: missing fields');
-      setError('Please fill in all fields');
-      setShowError(true);
+      Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     setLoading(true);
-    setError(null);
-
     try {
-      console.log('[AUTH] Attempting to sign in with Supabase');
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) {
-        console.error('[AUTH] Sign in error:', authError);
-        throw authError;
-      }
-
-      if (data.session && data.user) {
-        console.log('[AUTH] Sign in successful:', { userId: data.user.id, email: data.user.email });
-        setSession(data.session);
-        setUser(data.user);
-        console.log('[AUTH] Navigating to journeys screen');
-        router.replace('/(tabs)/journeys');
-      } else {
-        console.warn('[AUTH] Sign in returned no session or user');
-      }
-    } catch (err: any) {
-      console.error('[AUTH] Login exception:', err);
-      setError(err.message || 'Failed to sign in');
-      setShowError(true);
+      await signIn(email, password);
+      router.replace('/(tabs)/home');
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -60,62 +39,47 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text variant="headlineLarge" style={styles.title}>
-            Welcome to Everest
-          </Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>
-            Sign in to continue your journey
-          </Text>
+      <View style={styles.content}>
+        <Text style={styles.title}>Everest</Text>
+        <Text style={styles.subtitle}>Gamify Your Physical Activity</Text>
 
+        <View style={styles.form}>
           <TextInput
-            label="Email"
+            style={styles.input}
+            placeholder="Email"
             value={email}
             onChangeText={setEmail}
-            mode="outlined"
             keyboardType="email-address"
             autoCapitalize="none"
-            style={styles.input}
-            disabled={loading}
+            autoComplete="email"
           />
-
           <TextInput
-            label="Password"
+            style={styles.input}
+            placeholder="Password"
             value={password}
             onChangeText={setPassword}
-            mode="outlined"
             secureTextEntry
-            style={styles.input}
-            disabled={loading}
+            autoCapitalize="none"
           />
 
-          <Button
-            mode="contained"
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
-            loading={loading}
             disabled={loading}
-            style={styles.button}
           >
-            Sign In
-          </Button>
+            <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
+          </TouchableOpacity>
 
           <View style={styles.linkContainer}>
-            <Text>Don't have an account? </Text>
+            <Text style={styles.linkText}>Don't have an account? </Text>
             <Link href="/(auth)/register" asChild>
-              <Text style={styles.link}>Sign Up</Text>
+              <TouchableOpacity>
+                <Text style={styles.link}>Sign Up</Text>
+              </TouchableOpacity>
             </Link>
           </View>
         </View>
-      </ScrollView>
-
-      <Snackbar
-        visible={showError}
-        onDismiss={() => setShowError(false)}
-        duration={3000}
-      >
-        {error}
-      </Snackbar>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -123,38 +87,66 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
+    backgroundColor: '#f5f5f5',
   },
   content: {
+    flex: 1,
+    justifyContent: 'center',
     padding: 20,
   },
   title: {
-    marginBottom: 8,
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#2563eb',
     textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
-    marginBottom: 32,
+    fontSize: 18,
+    color: '#6b7280',
     textAlign: 'center',
-    opacity: 0.7,
+    marginBottom: 40,
+  },
+  form: {
+    width: '100%',
   },
   input: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   button: {
+    backgroundColor: '#2563eb',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
     marginTop: 8,
-    marginBottom: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
   },
   linkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginTop: 24,
+  },
+  linkText: {
+    color: '#6b7280',
+    fontSize: 16,
   },
   link: {
-    color: '#6200ee',
-    fontWeight: 'bold',
+    color: '#2563eb',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
